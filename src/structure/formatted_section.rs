@@ -28,6 +28,9 @@ impl<'a, K: FromStr, L: FromLine<'a>> FromLines<'a> for FormattedSection<'a, K, 
             .1;
         let mut lines_ = Vec::with_capacity(lines.len());
         for &line in lines {
+            if line.0 == "Format" {
+                continue;
+            }
             lines_.push((
                 line.0
                     .parse::<K>()
