@@ -12,10 +12,10 @@ use std::error::Error;
 use std::marker::PhantomData;
 use std::str::FromStr;
 
-pub struct Ass<'a, E: FromLine<'a>> {
+pub struct Ass<'a> {
     pub info: ScriptInfo<'a>,
     pub styles: Styles<'a>,
-    pub events: Events<'a, E>,
+    pub events: Events<'a>,
 }
 
 
@@ -25,11 +25,17 @@ pub trait FromLines<'a> where Self: Sized {
     fn from_lines(lines: &[(&'a str, &'a str)]) -> Result<Self, Self::Err>;
 }
 
-impl<'a, E: FromLine<'a>> Ass<'a, E> {
+#[derive(Debug, Copy, Clone, Eq, PartialEq)]
+pub enum SectionParseError {
+    SectionNotFound,
+    CannotParseSection,
+}
+
+impl<'a> Ass<'a> {
     pub fn from_elements<T: Iterator<Item = &'a str>>(iter: Elements<'a, T>) -> Self {
         let mut info: ScriptInfo = Default::default();
         let mut styles: Styles = Default::default();
-        let mut events: Option<Events<E>> = Default::default();
+        let mut events: Option<Events> = Default::default();
         let mut current_section: Option<&'a str> = Default::default();
         let mut lines: Vec<(&'a str, &'a str)> = vec![];
         for i in iter {
@@ -68,6 +74,37 @@ impl<'a, E: FromLine<'a>> Ass<'a, E> {
             styles,
             events: events.unwrap(),
         }
+    }
+
+    pub fn parse_section<'b, T: FromLines<'b>>(name: &str, s: &'b str) -> Result<T, SectionParseError> {
+        let mut current_section: Option<&'b str> = Default::default();
+        let mut lines: Vec<(&'b str, &'b str)> = vec![];
+        let iter = crate::iter::parse_str(s);
+        for i in iter {
+            if i.is_err() {
+                continue;
+            }
+            match i.unwrap() {
+                Element::SectionDefinition(section_name) => {
+                    if let Some(name_) = current_section {
+                        if name_ == name {
+                            return T::from_lines(&lines).map_err(|_| SectionParseError::CannotParseSection)
+                        }
+                    }
+                    current_section = Some(section_name);
+                    lines.clear();
+                }
+                Element::Line { name, value } if name != "!" => lines.push((name, value)),
+                _ => (), // Ignore comments
+            }
+        }
+        if let Some(name_) = current_section {
+            if name_ == name {
+                return T::from_lines(&lines).map_err(|_| SectionParseError::CannotParseSection)
+            }
+        }
+
+        Err(SectionParseError::SectionNotFound)
     }
 }
 
@@ -170,9 +207,8 @@ pub struct Styles<'a> {
 }
 
 #[derive(Debug, Clone, Default)]
-pub struct Events<'a, E: FromLine<'a>> {
-    pd: PhantomData<&'a str>,
-    pub events: Vec<E>,
+pub struct Events<'a> {
+    pub events: Vec<Event<'a>>,
 }
 
 #[derive(Debug)]
@@ -251,7 +287,7 @@ impl<'a> FromLines<'a> for Styles<'a> {
     }
 }
 
-impl<'a, E: FromLine<'a>> FromLines<'a> for Events<'a, E> {
+impl<'a> FromLines<'a> for Events<'a> {
     type Err = Infallible;
 
     fn from_lines(lines: &[(&'a str, &'a str)]) -> Result<Self, Self::Err> {
@@ -272,13 +308,13 @@ impl<'a, E: FromLine<'a>> FromLines<'a> for Events<'a, E> {
 		// 	}
 		// 	let ev = Event::from_line(value, format);
 		// }
-        let events: Vec<E> = lines
+        let events: Vec<Event> = lines
             .iter()
             .filter(|(name, value)| *name != "Format")
             .map(|x| FromLine::from_line(x.1, format))
             .filter_map(|x| x.ok())
             .collect();
-        Ok(Self { pd: PhantomData::default(), events })
+        Ok(Self { events })
     }
 }
 
