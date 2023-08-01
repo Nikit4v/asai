@@ -4,3 +4,5 @@
 **/target
 **/Cargo.lock
 /test_data
+/.idea
+/.DS_Store
