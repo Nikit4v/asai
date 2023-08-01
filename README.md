@@ -8,7 +8,7 @@ Add this to your Cargo.toml:
 
 ```toml
 [dependencies]
-asai = "0.1.0"
+asai = "0.1"
 ```
 
 ## Usage 
