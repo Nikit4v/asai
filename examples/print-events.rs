@@ -1,7 +1,7 @@
 use std::env::args;
-use asai::parse_str;
-use asai::structure::Events;
-use asai::structure::event::Event;
+use asai::structure::{Ass};
+use asai::structure::event::{Event, EventKey};
+use asai::structure::formatted_section::FormattedSection;
 use asai_macro::FromLine;
 
 #[derive(FromLine, Debug)]
@@ -17,11 +17,12 @@ pub fn main() {
     let mut args = args();
     let t = std::time::Instant::now();
     let data = std::fs::read_to_string(args.nth(1).expect("No path provided")).unwrap();
-    let my_events: Events<MyEvent> = parse_str(&data).events; // Using custom structure
+
+    let my_events: FormattedSection<EventKey, MyEvent> = Ass::parse_section("Events", &data).unwrap(); // Using custom structure
     println!("Custom: {:?}", t.elapsed());
     let t = std::time::Instant::now();
-    let builtin_events: Events<Event> = parse_str(&data).events; // Using builtin one
+    let builtin_events: FormattedSection<EventKey, Event> = Ass::parse_section("Events", &data).unwrap(); // Using custom structure
     println!("Builtin: {:?}", t.elapsed());
-    println!("{:#?}", my_events.events[my_events.events.len() - 1]);
-    println!("{:#?}", builtin_events.events[builtin_events.events.len() - 1]);
+    println!("{:#?}", my_events[my_events.len() - 1]);
+    println!("{:#?}", builtin_events[builtin_events.len() - 1]);
 }

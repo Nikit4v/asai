@@ -66,7 +66,7 @@ impl<'a> TryFrom<LineField<'a>> for bool {
     type Error = InvalidValue;
 
     fn try_from(value: LineField<'a>) -> Result<Self, Self::Error> {
-        match value.into() {
+        match value.value() {
             "0" => Ok(false),
             "-1" => Ok(true),
             _ => Err(InvalidValue)

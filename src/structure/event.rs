@@ -1,4 +1,5 @@
 use std::num::ParseIntError;
+use std::str::FromStr;
 use super::base_types::*;
 use std::time::Duration;
 use asai_macro::{ FromLine };
@@ -49,6 +50,24 @@ pub struct Event<'a> {
     effect: &'a str,
     #[name("Text")]
     text: &'a str,
+}
+
+#[derive(Debug, Copy, Clone, Eq, PartialEq)]
+pub enum EventKey {
+    Comment,
+    Dialogue,
+}
+
+impl FromStr for EventKey {
+    type Err = InvalidValue;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s {
+            "Comment" => Ok(Self::Comment),
+            "Dialogue" => Ok(Self::Dialogue),
+            _ => Err(InvalidValue)
+        }
+    }
 }
 
 // Workaround to make macros work in this context

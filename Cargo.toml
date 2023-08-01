@@ -1,11 +1,12 @@
 [package]
 name = "asai"
-version = "0.1.0"
+version = "0.1.1"
 edition = "2021"
 description = "Library for .ass file parsing."
 license = "MIT"
+repository = "https://github.com/nikit4v/asai"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-asai-macro = { path = "asai-macro" }
+asai-macro = { path = "asai-macro", version = "0.1" }

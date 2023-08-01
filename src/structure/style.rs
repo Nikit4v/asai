@@ -1,3 +1,4 @@
+use std::str::FromStr;
 use asai_macro::FromLine;
 use crate::structure::InvalidValue;
 use super::base_types::*;
@@ -103,6 +104,23 @@ pub struct Style<'a> {
     #[name("Encoding")]
     encoding: u32,
 }
+
+
+pub enum StyleKey {
+    Style,
+}
+
+impl FromStr for StyleKey {
+    type Err = InvalidValue;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s {
+            "Style" => Ok(Self::Style),
+            _ => Err(InvalidValue)
+        }
+    }
+}
+
 
 // Workaround to make macros work in this context
 mod asai {
